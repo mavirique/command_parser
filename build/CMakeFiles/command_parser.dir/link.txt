@@ -1,0 +1,1 @@
+/opt/gcc-15/bin/c++ -Wl,--dependency-file=CMakeFiles/command_parser.dir/link.d CMakeFiles/command_parser.dir/src/main.cpp.o CMakeFiles/command_parser.dir/src/hash_util.cpp.o CMakeFiles/command_parser.dir/src/cli_parse.cpp.o -o command_parser  /usr/lib/x86_64-linux-gnu/libcrypto.so /usr/lib/x86_64-linux-gnu/libssl.so /usr/lib/x86_64-linux-gnu/libcrypto.so
