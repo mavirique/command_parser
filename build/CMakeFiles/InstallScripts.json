@@ -1,7 +1,0 @@
-{
-	"InstallScripts" : 
-	[
-		"/home/peter/cpp/command_parser/build/cmake_install.cmake"
-	],
-	"Parallel" : false
-}

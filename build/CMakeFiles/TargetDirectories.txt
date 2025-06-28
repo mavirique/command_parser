@@ -1,3 +1,0 @@
-/home/peter/cpp/command_parser/build/CMakeFiles/command_parser.dir
-/home/peter/cpp/command_parser/build/CMakeFiles/edit_cache.dir
-/home/peter/cpp/command_parser/build/CMakeFiles/rebuild_cache.dir
