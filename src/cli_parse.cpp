@@ -1,68 +1,84 @@
 #include "cli_parse.hpp"
 #include "hash_util.hpp"
+#include "fs_util.hpp"
 
 #include <iostream>
 #include <fstream>
 #include <span>
 #include <filesystem>
+#include <unistd.h>
 
 namespace {
-constexpr std::size_t kVerifyMinArgs = 5;
+    constexpr std::size_t kVerifyMinArgs = 5;
 
-auto parse_verify_args(const std::vector<std::string_view>& args)
-    -> std::expected<VerifyCmd, std::string>
-{
-    constexpr std::size_t kAlgoIdx = 1;
-    constexpr std::size_t kFirstOptIdx = 2;
-    if (args.size() < kVerifyMinArgs) {
-        return std::unexpected("Usage: verify md5|sha1|sha256 --text|--file ... --expected...");
-    }
-    HashAlgo algo = parse_algo(args[kAlgoIdx]);
-    if (algo == HashAlgo::Unknown) {
-        return std::unexpected("Unknown hash algorithm for verify.");
-    }
-    std::optional<std::string> text;
-    std::optional<std::filesystem::path> file;
-    std::string expected;
-    for (std::size_t i = kFirstOptIdx; i < args.size(); ++i) {
-        if (args[i] == "--text" && i + 1 < args.size()) {
-            text = std::string(args[++i]);
-        } else if (args[i] == "--file" && i + 1 < args.size()) {
-            file = std::filesystem::path(args[++i]);
-        } else if (args[i] == "--expected" && i + 1 < args.size()) {
-            expected = std::string(args[++i]);
+    auto parse_verify_args(const std::vector<std::string_view>& args)
+        -> std::expected<VerifyCmd, std::string>
+    {
+        constexpr std::size_t kAlgoIdx = 1;
+        constexpr std::size_t kFirstOptIdx = 2;
+        if (args.size() < kVerifyMinArgs) {
+            return std::unexpected("Usage: verify md5|sha1|sha256 --text|--file ... --expected...");
         }
+        HashAlgo algo = parse_algo(args[kAlgoIdx]);
+        if (algo == HashAlgo::Unknown) {
+            return std::unexpected("Unknown hash algorithm for verify.");
+        }
+        std::optional<std::string> text;
+        std::optional<std::filesystem::path> file;
+        std::string expected;
+        for (std::size_t i = kFirstOptIdx; i < args.size(); ++i) {
+            if (args[i] == "--text" && i + 1 < args.size()) {
+                text = std::string(args[++i]);
+            } else if (args[i] == "--file" && i + 1 < args.size()) {
+                auto path = std::filesystem::path(args[++i]);
+                int fd = fsutil::open_and_check_owned_by_user(path);
+                if (fd < 0) {
+                    return std::unexpected("File '" + path.string() +
+                        "' is not owned by the current user, inaccessible, or is a symlink.");
+                }
+                ::close(fd);
+                file = path; // only after the check!
+            } else if (args[i] == "--expected" && i + 1 < args.size()) {
+                expected = std::string(args[++i]);
+            }
+        }    
+        if ((!text && !file) || expected.empty()) {
+            return std::unexpected("Missing input or --expected hash.");
+        }
+        return VerifyCmd{algo, text, file, expected};
     }
-    if ((!text && !file) || expected.empty()) {
-        return std::unexpected("Missing input or --expected hash.");
-    }
-    return VerifyCmd{algo, text, file, expected};
-}
 
-auto parse_hash_args(std::string_view main_cmd, const std::vector<std::string_view>& args)
-    -> std::expected<HashCmd, std::string>
-{
-    HashAlgo algo = parse_algo(main_cmd);
-    if (algo == HashAlgo::Unknown) {
-        return std::unexpected("Unknown hash algorithm.");
-    }
-    std::optional<std::string> text;
-    std::optional<std::filesystem::path> file;
-    std::optional<std::filesystem::path> output;
-    for (std::size_t i = 1; i < args.size(); ++i) {
-        if (args[i] == "--text" && i + 1 < args.size()) {
-            text = std::string(args[++i]);
-        } else if (args[i] == "--file" && i + 1 < args.size()) {
-            file = std::filesystem::path(args[++i]);
-        } else if (args[i] == "--output" && i + 1 < args.size()) {
-            output = std::filesystem::path(args[++i]);
+    auto parse_hash_args(std::string_view main_cmd, const std::vector<std::string_view>& args)
+        -> std::expected<HashCmd, std::string>
+    {
+        HashAlgo algo = parse_algo(main_cmd);
+        if (algo == HashAlgo::Unknown) {
+            return std::unexpected("Unknown hash algorithm.");
         }
+        std::optional<std::string> text;
+        std::optional<std::filesystem::path> file;
+        std::optional<std::filesystem::path> output;
+        for (std::size_t i = 1; i < args.size(); ++i) {
+            if (args[i] == "--text" && i + 1 < args.size()) {
+                text = std::string(args[++i]);
+            } else if (args[i] == "--file" && i + 1 < args.size()) {           
+                auto path = std::filesystem::path(args[++i]);
+                int fd = fsutil::open_and_check_owned_by_user(path);
+                if (fd < 0) {
+                    return std::unexpected("File '" + path.string() +
+                        "' is not owned by the current user, inaccessible, or is a symlink.");
+                }
+                ::close(fd);
+                file = path; // only after the check!        
+            } else if (args[i] == "--output" && i + 1 < args.size()) {
+                output = std::filesystem::path(args[++i]);
+            }
+        }
+        if (!text && !file) {
+            return std::unexpected("Specify --text or --file.");
+        }
+        return HashCmd{algo, text, file, output};
     }
-    if (!text && !file) {
-        return std::unexpected("Specify --text or --file.");
-    }
-    return HashCmd{algo, text, file, output};
-}
 } // anonymous namespace
 
 auto parse_cli(const std::vector<std::string_view>& args)
@@ -71,6 +87,7 @@ auto parse_cli(const std::vector<std::string_view>& args)
     if (args.empty()) {
         return std::unexpected("Missing command.");
     }
+
     std::string_view main_cmd = args[0];
     if (main_cmd == "verify") {
         auto res = parse_verify_args(args);
@@ -79,10 +96,12 @@ auto parse_cli(const std::vector<std::string_view>& args)
         }
         return res.value();
     }
+
     auto res = parse_hash_args(main_cmd, args);
     if (!res) {
         return std::unexpected(res.error());
     }
+
     return res.value();
 }
 

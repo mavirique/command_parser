@@ -6,6 +6,7 @@ include_directories(include)
 add_executable(command_parser
     src/main.cpp
     src/hash_util.cpp
+    src/fs_util.cpp
     src/cli_parse.cpp
 )
 
