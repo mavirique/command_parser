@@ -6,7 +6,6 @@
 #include <fstream>
 #include <span>
 #include <filesystem>
-#include <unistd.h>
 
 namespace {
     constexpr std::size_t kVerifyMinArgs = 5;
@@ -31,12 +30,20 @@ namespace {
                 text = std::string(args[++i]);
             } else if (args[i] == "--file" && i + 1 < args.size()) {
                 auto path = std::filesystem::path(args[++i]);
-                int fd = fsutil::open_and_check_owned_by_user(path);
-                if (fd < 0) {
-                    return std::unexpected("File '" + path.string() +
-                        "' is not owned by the current user, inaccessible, or is a symlink.");
+                auto owner_result = fsutil::is_owned_by_current_user(path);
+                if (!owner_result.has_value()) {
+                    std::cerr << "Owner check error: " << owner_result.error() << std::endl;
+                } else if (!owner_result.value()) {
+                    std::cerr << "File is not owned by the current user." << std::endl;
                 }
-                ::close(fd);
+                
+                auto symlink_result = fsutil::is_symlink(path);
+                if (!symlink_result.has_value()) {
+                    std::cerr << "Symlink check error: " << symlink_result.error() << std::endl;
+                } else if (symlink_result.value()) {
+                    std::cerr << "File is a symlink (refused for security)." << std::endl;
+                }               
+
                 file = path; // only after the check!
             } else if (args[i] == "--expected" && i + 1 < args.size()) {
                 expected = std::string(args[++i]);
@@ -63,12 +70,20 @@ namespace {
                 text = std::string(args[++i]);
             } else if (args[i] == "--file" && i + 1 < args.size()) {           
                 auto path = std::filesystem::path(args[++i]);
-                int fd = fsutil::open_and_check_owned_by_user(path);
-                if (fd < 0) {
-                    return std::unexpected("File '" + path.string() +
-                        "' is not owned by the current user, inaccessible, or is a symlink.");
+                auto owner_result = fsutil::is_owned_by_current_user(path);
+                if (!owner_result.has_value()) {
+                    std::cerr << "Owner check error: " << owner_result.error() << std::endl;
+                } else if (!owner_result.value()) {
+                    std::cerr << "File is not owned by the current user." << std::endl;
                 }
-                ::close(fd);
+                
+                auto symlink_result = fsutil::is_symlink(path);
+                if (!symlink_result.has_value()) {
+                    std::cerr << "Symlink check error: " << symlink_result.error() << std::endl;
+                } else if (symlink_result.value()) {
+                    std::cerr << "File is a symlink (refused for security)." << std::endl;
+                }    
+
                 file = path; // only after the check!        
             } else if (args[i] == "--output" && i + 1 < args.size()) {
                 output = std::filesystem::path(args[++i]);
