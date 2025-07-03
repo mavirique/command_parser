@@ -8,6 +8,7 @@
     #include <windows.h>
     #include <sddl.h>
     #include <tchar.h>
+    #include <AclAPI.h>
 #elif defined(__unix__) || defined(__APPLE__)
     #include <sys/stat.h>
     #include <unistd.h>
@@ -40,7 +41,6 @@ namespace fsutil {
         
             PSECURITY_DESCRIPTOR pSD = nullptr;
             PSID pOwnerSid = nullptr;
-            BOOL bOwnerDefaulted = FALSE;
             if (GetNamedSecurityInfoA(path.string().c_str(), SE_FILE_OBJECT, OWNER_SECURITY_INFORMATION,
                                       &pOwnerSid, nullptr, nullptr, nullptr, &pSD) != ERROR_SUCCESS) {
                 LocalFree(strCurrentSid);
