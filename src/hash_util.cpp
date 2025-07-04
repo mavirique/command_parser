@@ -1,7 +1,9 @@
 #include "hash_util.hpp"
+
 #include <fstream>
 #include <sstream>
 #include <iomanip>
+#include <iostream>
 #include <array>
 #include <cstring>
 #include <openssl/evp.h>
@@ -59,4 +61,69 @@ auto hash_data(HashAlgo algo, std::span<const std::byte> data)
         oss << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(digest[i]);
     }
     return oss.str();
+}
+
+auto perform_command(const HashCmd& cmd) -> std::expected<void, std::string> {
+    std::vector<std::byte> data;
+
+    // Input: text or file
+    if (cmd.text) {
+        const auto* ptr = reinterpret_cast<const std::byte*>(cmd.text->data());
+        data.assign(ptr, ptr + cmd.text->size());
+    } else if (cmd.file) {
+        auto result = read_file_binary(*cmd.file);
+        if (!result) {
+            return std::unexpected("File error: " + result.error());
+        }
+        data = std::move(result.value());
+    } else {
+        return std::unexpected("No input (-t or -f) provided.");
+    }
+
+    auto hash = hash_data(cmd.algo, data);
+    if (!hash) {
+        return std::unexpected("Hash error: " + hash.error());
+    }
+
+    if (cmd.output) {
+        std::ofstream ofs(*cmd.output, std::ios::out | std::ios::trunc);
+        if (!ofs) {
+            return std::unexpected("Failed to write output: " + cmd.output->string());
+        }
+        ofs << hash.value() << '\n';
+    } else {
+        std::cout << hash.value() << '\n';
+    }
+    return {};
+}
+
+auto perform_command(const VerifyCmd& cmd) -> std::expected<void, std::string> {
+    std::vector<std::byte> data;
+
+    if (cmd.text) {
+        const auto* ptr = reinterpret_cast<const std::byte*>(cmd.text->data());
+        data.assign(ptr, ptr + cmd.text->size());
+    } else if (cmd.file) {
+        auto result = read_file_binary(*cmd.file);
+        if (!result) {
+            return std::unexpected("File error: " + result.error());
+        }
+        data = std::move(result.value());
+    } else {
+        return std::unexpected("No input (-t or -f) provided for verification.");
+    }
+
+    auto actual = hash_data(cmd.algo, data);
+    if (!actual) {
+        return std::unexpected("Hash error: " + actual.error());
+    }
+
+    if (actual.value() == cmd.expected) {
+        std::cout << "OK\n";
+        return {};
+    }
+    std::cout << "FAIL\n";
+    std::cout << "Expected: " << cmd.expected << '\n';
+    std::cout << "Actual  : " << actual.value() << '\n';
+    return std::unexpected("Hash verification failed.");
 }
