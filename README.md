@@ -1,70 +1,102 @@
-# command_parser
+command_parser
+A secure, modern C++23 command-line hash and verification tool for cybersecurity.
 
-A modern C++23 command-line tool for generating and verifying file or text hashes (MD5, SHA-1, SHA-256) using OpenSSL.  
-Built with security, clarity, and best practices in mind.
+Features
+Hash text or files using MD5, SHA1, or SHA256
 
-## Features
+Verify hashes for files or text against expected values
 
-- Hash any file or text with MD5, SHA-1, or SHA-256
-- Verify the hash of a file or text against an expected value
-- Modern C++23 code, modular, secure, and ready for extension
+Short, UNIX-style CLI flags (-h, -t, -f, -o, -v, -e)
 
-## Usage
+Secure, modern C++23 code with strong error handling
 
-**Hash a file:**
+Refuses duplicate or unknown arguments
 
-./command_parser sha256 --file myfile.txt
+Safe file handling: only user-owned, non-symlinked files can be hashed/verified
 
-**Hash text:**
+Build
+Requirements:
 
-./command_parser md5 --text "hello world"
+C++23 compiler (GCC 13+, Clang 16+, MSVC 2022+)
 
-**Write hash to a file:**
+OpenSSL (dev package, e.g. libssl-dev on Linux)
 
-./command_parser sha1 --file myfile.txt --output hash.txt
+CMake 3.20+
 
-**Verify a file or text:**
+Build steps:
 
-./command_parser verify sha256 --file myfile.txt --expected "<hash>"
-./command_parser verify md5 --text "hello world" --expected "<hash>"
-
-## Building
-
-You need a C++23 compiler and OpenSSL development libraries.
-
-### With CMake (recommended):
-
-git clone https://github.com/YOUR_GITHUB/command_parser.git
+sh
+Copy
+Edit
+git clone https://github.com/mavirique/command_parser.git
 cd command_parser
 mkdir build && cd build
 cmake ..
-cmake --build .
+make
+Usage
+php-template
+Copy
+Edit
+command_parser -h <algo> -t <text> # Hash text
+command_parser -h <algo> -f <file> # Hash file
+command_parser -h <algo> -t <text> -o <out> # Hash text, write output
+command_parser -h <algo> -f <file> -o <out> # Hash file, write output
 
-Or compile manually:
+command_parser -v -h <algo> -t <text> -e <hash> # Verify text
+command_parser -v -h <algo> -f <file> -e <hash> # Verify file
 
-g++ -std=c++23 -Wall -Wextra -O2 src/\*.cpp -Iinclude -lssl -lcrypto -o command_parser
+command_parser --help | -H # Show usage
+Flags
+Flag Purpose
+-h <algo> Hash algorithm: md5, sha1, sha256
+-t <text> Text to hash
+-f <file> File to hash
+-o <out> Output file (optional, for hash command)
+-v Verification mode
+-e <hash> Expected hash (required for verification)
+--help Show usage
+-H Show usage
 
-## Folder Structure
+Only one of -t or -f may be specified per command.
 
-include/ # Public headers
-src/ # Source files
-test/ # (optional) Unit tests
-CMakeLists.txt # Build system file
+Duplicate or unknown flags are rejected with an error.
 
-## License
+Output: Prints hash/OK/FAIL to stdout, or writes to file with -o.
 
-This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
+Examples
+Hash a file:
 
----
+nginx
+Copy
+Edit
+command_parser -h sha256 -f myfile.txt
+Hash text and write to file:
 
-## Contributing
+python
+Copy
+Edit
+command_parser -h md5 -t "hello world" -o hash.txt
+Verify a file’s hash:
 
-Pull requests, issues, and suggestions are welcome!  
-Feel free to fork and hack on your own version.
+nginx
+Copy
+Edit
+command_parser -v -h sha256 -f myfile.txt -e 4d186321c1a7f0f354b297e8914ab240
+Security Notes
+Refuses to hash or verify files not owned by the user.
 
----
+Refuses to hash or verify symlinked files.
 
-## Security Notes
+All command-line arguments are validated and parsed safely using modern C++23 practices.
 
-- Always verify input files before using in production.
-- Use latest OpenSSL version for maximum security.
+Development & Contributing
+Code is modern C++23 and clang-tidy clean.
+
+Pull requests for more algorithms, CLI improvements, or security reviews are welcome!
+
+To test or audit, see the source for unit-testable logic in cli_parse.cpp and hash_util.cpp.
+
+License
+MIT
+
+Built by cybersecurity enthusiasts, for cybersecurity practitioners.
