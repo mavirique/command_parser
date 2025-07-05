@@ -66,6 +66,7 @@
     "bitset": "cpp",
     "__hash_table": "cpp",
     "deque": "cpp",
-    "unordered_map": "cpp"
+    "unordered_map": "cpp",
+    "set": "cpp"
   }
 }

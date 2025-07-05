@@ -92,7 +92,7 @@ auto perform_command(const HashCmd& cmd) -> std::expected<void, std::string> {
         }
         ofs << hash.value() << '\n';
     } else {
-        std::cout << hash.value() << '\n';
+        std::cout << "Hash: " << hash.value() << std::endl;
     }
     return {};
 }
@@ -119,10 +119,11 @@ auto perform_command(const VerifyCmd& cmd) -> std::expected<void, std::string> {
     }
 
     if (actual.value() == cmd.expected) {
-        std::cout << "OK\n";
+        std::cout << "The hash: " << cmd.expected << std::endl;
+        std::cout << "Is Verified" << std::endl;
         return {};
     }
-    std::cout << "FAIL\n";
+    std::cout << "Hash Vefication FAIL" << std::endl;
     std::cout << "Expected: " << cmd.expected << '\n';
     std::cout << "Actual  : " << actual.value() << '\n';
     return std::unexpected("Hash verification failed.");

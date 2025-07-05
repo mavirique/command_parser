@@ -1,6 +1,6 @@
 # command_parser
 
-A secure, modern C++23 command-line hash and verification tool for cybersecurity.
+An educational example of a command parser for CLI applications, written in modern C++23. Demonstrates clean and efficient command parsing, using up-to-date C++ features and best practices. Ideal for learning how to build robust CLI tools in C++.
 
 ---
 
@@ -36,21 +36,29 @@ cmake --build .
 ## Usage
 
 ```
-command_parser -h <algo> -t <text> # Hash text
-command_parser -h <algo> -f <file> # Hash file
-command_parser -h <algo> -t <text> -o <out> # Hash text, write output
-command_parser -h <algo> -f <file> -o <out> # Hash file, write output
+ # Hash text
+command_parser -h <algo> -t <text>
 
-command_parser -v -h <algo> -t <text> -e <hash> # Verify text
-command_parser -v -h <algo> -f <file> -e <hash> # Verify file
+ # Hash file
+command_parser -h <algo> -f <file>
+
+ # Hash text, write output
+command_parser -h <algo> -t <text> -o <out>
+
+ # Hash file, write output
+command_parser -h <algo> -f <file> -o <out>
+
+ # Verify text
+command_parser -v -h <algo> -t <text> -e <hash>
+
+ # Verify file
+command_parser -v -h <algo> -f <file> -e <hash>
 
 command_parser --help
 command_parser -H # Show usage
 ```
 
 ## Flags
-
-Flag Purpose
 
 ```
 -h <algo> Hash algorithm: md5, sha1, sha256
@@ -75,7 +83,7 @@ Output: Prints hash/OK/FAIL to stdout, or writes to file with -o.
 command_parser -h sha256 -f myfile.txt
 ```
 
-Hash text and write to file:
+**Hash text and write to file:**
 
 ```
 command_parser -h md5 -t "hello world" -o hash.txt
@@ -84,7 +92,7 @@ command_parser -h md5 -t "hello world" -o hash.txt
 **Verify a file’s hash:**
 
 ```
-command_parser -v -h sha256 -f myfile.txt -e 4d186321c1a7f0f354b297e8914ab240
+./command_parser -v -h sha256 -f sample.txt -e 7f83b1657ff1fc53b92dc18148a1d65dfc2d4b1fa3d677284addd200126d9069
 ```
 
 ## Security Notes

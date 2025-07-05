@@ -42,7 +42,6 @@ auto handle_flag(ParseResult& result, const std::vector<std::string_view>& args,
         if (arg != "-o" && seen_flags.contains(arg)) {
             std::ostringstream oss;
             oss << "Duplicate flag detected: " << arg << "\n";
-            print_usage(oss);
             return std::unexpected(oss.str());
         }
         seen_flags.insert(arg);
@@ -74,7 +73,6 @@ auto handle_flag(ParseResult& result, const std::vector<std::string_view>& args,
     }
     std::ostringstream oss;
     oss << "Unknown argument: " << arg << "\n";
-    print_usage(oss);
     return std::unexpected(oss.str());
 }
 
@@ -100,7 +98,6 @@ auto parse_cli(const std::vector<std::string_view>& args)
     if (args.size() <= 1) {
         std::ostringstream oss;
         oss << "No arguments provided.\n";
-        print_usage(oss);
         return std::unexpected(oss.str());
     }
 
@@ -119,19 +116,16 @@ auto parse_cli(const std::vector<std::string_view>& args)
     if (!parsed.algo || parsed.algo.value() == HashAlgo::Unknown) {
         std::ostringstream oss;
         oss << "Missing or invalid hash algorithm (-h md5|sha1|sha256).\n";
-        print_usage(oss);
         return std::unexpected(oss.str());
     }
     if (!(parsed.text || parsed.file)) {
         std::ostringstream oss;
         oss << "Specify input with -t <text> or -f <file>.\n";
-        print_usage(oss);
         return std::unexpected(oss.str());
     }
     if (parsed.text && parsed.file) {
         std::ostringstream oss;
         oss << "Cannot specify both -t and -f.\n";
-        print_usage(oss);
         return std::unexpected(oss.str());
     }
 
@@ -140,7 +134,6 @@ auto parse_cli(const std::vector<std::string_view>& args)
         if (!parsed.expected) {
             std::ostringstream oss;
             oss << "Missing expected hash (-e) for verify.\n";
-            print_usage(oss);
             return std::unexpected(oss.str());
         }
         return VerifyCmd{parsed.algo.value(), parsed.text, parsed.file, parsed.expected.value()};
