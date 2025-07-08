@@ -54,8 +54,9 @@ command_parser -v -h <algo> -t <text> -e <hash>
  # Verify file
 command_parser -v -h <algo> -f <file> -e <hash>
 
+# Show usage
 command_parser --help
-command_parser -H # Show usage
+command_parser -H
 ```
 
 ## Flags
