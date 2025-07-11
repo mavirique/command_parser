@@ -1,6 +1,7 @@
 #include "hash_util.hpp"
 
 #include <fstream>
+#include <format>
 #include <sstream>
 #include <iomanip>
 #include <iostream>
@@ -8,9 +9,7 @@
 #include <cstring>
 #include <openssl/evp.h>
 
-auto read_file_binary(const std::filesystem::path& file)
-    -> std::expected<std::vector<std::byte>, std::string>
-{
+auto read_file_binary(const std::filesystem::path& file) -> std::expected<std::vector<std::byte>, std::string> {
     std::ifstream ifs(file, std::ios::binary);
     if (!ifs) {
         return std::unexpected("Failed to open file: " + file.string());
@@ -21,9 +20,7 @@ auto read_file_binary(const std::filesystem::path& file)
     return bytes;
 }
 
-auto hash_data(HashAlgo algo, std::span<const std::byte> data)
-    -> std::expected<std::string, std::string>
-{
+auto hash_data(HashAlgo algo, std::span<const std::byte> data) -> std::expected<std::string, std::string> {
     const EVP_MD* md_type = nullptr;
     switch (algo) {
         case HashAlgo::Md5:    md_type = EVP_md5(); break;
@@ -92,7 +89,7 @@ auto perform_command(const HashCmd& cmd) -> std::expected<void, std::string> {
         }
         ofs << hash.value() << '\n';
     } else {
-        std::cout << "Hash: " << hash.value() << std::endl;
+        std::cout << std::format("Hash: {} \n", hash.value());
     }
     return {};
 }
@@ -119,12 +116,12 @@ auto perform_command(const VerifyCmd& cmd) -> std::expected<void, std::string> {
     }
 
     if (actual.value() == cmd.expected) {
-        std::cout << "The hash: " << cmd.expected << std::endl;
+        std::cout << std::format("The hash: {}\n", cmd.expected);
         std::cout << "Is Verified" << std::endl;
         return {};
     }
     std::cout << "Hash Vefication FAIL" << std::endl;
-    std::cout << "Expected: " << cmd.expected << '\n';
-    std::cout << "Actual  : " << actual.value() << '\n';
+    std::cout << std::format("Expected: {} \n", cmd.expected);
+    std::cout << std::format("Actual  : {} \n", actual.value());
     return std::unexpected("Hash verification failed.");
 }

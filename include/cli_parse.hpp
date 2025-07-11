@@ -25,7 +25,6 @@ struct ParsedArgs {
     std::optional<std::filesystem::path> output;
 };
 
-auto parse_cli(const std::vector<std::string_view>& args)
-    -> std::expected<std::variant<HashCmd, VerifyCmd, CommandType>, std::string>;
+auto parse_cli(const std::vector<std::string_view>& args) -> std::expected<std::variant<HashCmd, VerifyCmd, CommandType>, std::string>;
 
 void print_usage(std::ostream& outputstream = std::cout);
